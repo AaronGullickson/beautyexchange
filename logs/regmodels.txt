@@ -1,0 +1,488 @@
+--------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /home/aarong/Private/AddHealth/regmodels.txt
+  log type:  text
+ opened on:  24 Jun 2016, 14:41:33
+
+. do runregmodels.do
+
+. /*
+> Aaron Gullickson
+> runmodels.do
+> 
+> This program will run our version of the conventional regression and differenc
+> e models from 
+> McClintock's paper. We will forego control variables and MIM just to get to th
+> e fundamenal issues
+> 
+> We will run her basic models and then show how the difference model is the sam
+> e as the conventional model
+> by including the missing parameters for wives education and husband's attracti
+> veness
+> */
+. 
+. use fulldata, clear
+
+. 
+. /**CONVENTIONAL MODEL MEDU**/
+. regress MYRED FATT FYRED MATT
+
+      Source |       SS           df       MS      Number of obs   =     1,506
+-------------+----------------------------------   F(3, 1502)      =    236.48
+       Model |  1912.28166         3   637.42722   Prob > F        =    0.0000
+    Residual |   4048.5364     1,502  2.69543036   R-squared       =    0.3208
+-------------+----------------------------------   Adj R-squared   =    0.3195
+       Total |  5960.81806     1,505  3.96067645   Root MSE        =    1.6418
+
+------------------------------------------------------------------------------
+       MYRED |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        FATT |   .1732362   .0510245     3.40   0.001     .0731493    .2733231
+       FYRED |   .5421693   .0217578    24.92   0.000     .4994904    .5848481
+        MATT |   .1933524   .0585024     3.31   0.001     .0785973    .3081075
+       _cons |   4.417297   .3427777    12.89   0.000     3.744923    5.089671
+------------------------------------------------------------------------------
+
+. correlate MYRED MATT
+(obs=1,506)
+
+             |    MYRED     MATT
+-------------+------------------
+       MYRED |   1.0000
+        MATT |   0.1648   1.0000
+
+
+. 
+. /**CONVENTIONAL MODEL MGRAD**/
+. glm MGRAD FATT FGRAD MATT, family(binomial) link(logit)
+
+Iteration 0:   log likelihood =  -591.1046  
+Iteration 1:   log likelihood = -582.91018  
+Iteration 2:   log likelihood = -582.89272  
+Iteration 3:   log likelihood = -582.89272  
+
+Generalized linear models                         No. of obs      =      1,494
+Optimization     : ML                             Residual df     =      1,490
+                                                  Scale parameter =          1
+Deviance         =  1165.785435                   (1/df) Deviance =   .7824063
+Pearson          =  1508.181332                   (1/df) Pearson  =   1.012202
+
+Variance function: V(u) = u*(1-u/1)               [Binomial]
+Link function    : g(u) = ln(u/(1-u))             [Logit]
+
+                                                  AIC             =   .7856663
+Log likelihood   = -582.8927173                   BIC             =  -9724.941
+
+------------------------------------------------------------------------------
+             |                 OIM
+       MGRAD |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        FATT |   .1433554   .0894814     1.60   0.109     -.032025    .3187358
+       FGRAD |   2.666088   .1498981    17.79   0.000     2.372293    2.959882
+        MATT |   .3532728   .1014438     3.48   0.000     .1544465     .552099
+       _cons |  -4.135873   .4424604    -9.35   0.000     -5.00308   -3.268667
+------------------------------------------------------------------------------
+
+. 
+. /**CONVENTIONAL MODEL FEDU**/
+. regress FYRED MATT MYRED FATT
+
+      Source |       SS           df       MS      Number of obs   =     1,506
+-------------+----------------------------------   F(3, 1502)      =    224.77
+       Model |   1808.5172         3  602.839067   Prob > F        =    0.0000
+    Residual |  4028.41241     1,502  2.68203223   R-squared       =    0.3098
+-------------+----------------------------------   Adj R-squared   =    0.3085
+       Total |  5836.92961     1,505  3.87835855   Root MSE        =    1.6377
+
+------------------------------------------------------------------------------
+       FYRED |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        MATT |   .1127317   .0584964     1.93   0.054    -.0020115    .2274749
+       MYRED |   .5394743   .0216496    24.92   0.000     .4970076     .581941
+        FATT |   .0348871   .0510846     0.68   0.495    -.0653176    .1350917
+       _cons |   5.569356   .3304361    16.85   0.000     4.921191    6.217521
+------------------------------------------------------------------------------
+
+. correlate FYRED FATT
+(obs=1,507)
+
+             |    FYRED     FATT
+-------------+------------------
+       FYRED |   1.0000
+        FATT |   0.1082   1.0000
+
+
+. 
+. /**CONVENTIONAL MODEL MGRAD**/
+. glm FGRAD MATT MGRAD FATT, family(binomial) link(logit)
+
+Iteration 0:   log likelihood = -678.16782  
+Iteration 1:   log likelihood = -677.07878  
+Iteration 2:   log likelihood = -677.07781  
+Iteration 3:   log likelihood = -677.07781  
+
+Generalized linear models                         No. of obs      =      1,494
+Optimization     : ML                             Residual df     =      1,490
+                                                  Scale parameter =          1
+Deviance         =  1354.155617                   (1/df) Deviance =   .9088293
+Pearson          =  1503.125399                   (1/df) Pearson  =   1.008809
+
+Variance function: V(u) = u*(1-u/1)               [Binomial]
+Link function    : g(u) = ln(u/(1-u))             [Logit]
+
+                                                  AIC             =   .9117507
+Log likelihood   = -677.0778086                   BIC             =  -9536.571
+
+------------------------------------------------------------------------------
+             |                 OIM
+       FGRAD |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        MATT |    .065807   .0947614     0.69   0.487    -.1199219    .2515359
+       MGRAD |   2.667796   .1498776    17.80   0.000     2.374042    2.961551
+        FATT |   .2341393   .0835066     2.80   0.005     .0704694    .3978092
+       _cons |  -2.826123   .4026014    -7.02   0.000    -3.615207   -2.037038
+------------------------------------------------------------------------------
+
+. 
+. /**DIFF MODEL EDU**/
+. generate DIFFEDU = MYRED-FYRED
+(1 missing value generated)
+
+. generate DIFFATT = MATT-FATT
+
+. 
+. regress DIFFEDU DIFFATT
+
+      Source |       SS           df       MS      Number of obs   =     1,506
+-------------+----------------------------------   F(1, 1504)      =      0.41
+       Model |  1.43883063         1  1.43883063   Prob > F        =    0.5211
+    Residual |  5254.25041     1,504  3.49351756   R-squared       =    0.0003
+-------------+----------------------------------   Adj R-squared   =   -0.0004
+       Total |  5255.68924     1,505  3.49215232   Root MSE        =    1.8691
+
+------------------------------------------------------------------------------
+     DIFFEDU |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+     DIFFATT |  -.0311871   .0485961    -0.64   0.521    -.1265104    .0641362
+       _cons |  -.2249012   .0489978    -4.59   0.000    -.3210125   -.1287899
+------------------------------------------------------------------------------
+
+. 
+. regress DIFFEDU DIFFATT FYRED MATT
+
+      Source |       SS           df       MS      Number of obs   =     1,506
+-------------+----------------------------------   F(3, 1502)      =    149.28
+       Model |  1207.15284         3  402.384281   Prob > F        =    0.0000
+    Residual |   4048.5364     1,502  2.69543036   R-squared       =    0.2297
+-------------+----------------------------------   Adj R-squared   =    0.2281
+       Total |  5255.68924     1,505  3.49215232   Root MSE        =    1.6418
+
+------------------------------------------------------------------------------
+     DIFFEDU |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+     DIFFATT |  -.1732362   .0510245    -3.40   0.001    -.2733231   -.0731493
+       FYRED |  -.4578307   .0217578   -21.04   0.000    -.5005096   -.4151519
+        MATT |   .3665886   .0679539     5.39   0.000      .233294    .4998833
+       _cons |   4.417297   .3427777    12.89   0.000     3.744923    5.089671
+------------------------------------------------------------------------------
+
+. 
+. //the terms are the same, but R-squared is different because y is different
+. 
+. //show that diff model is identical to a restricted conventional model
+. glm MYRED DIFFATT, offset(FYRED)
+
+Iteration 0:   log likelihood = -5274.3419  
+Iteration 1:   log likelihood = -3077.8553  
+
+Generalized linear models                         No. of obs      =      1,506
+Optimization     : ML                             Residual df     =      1,504
+                                                  Scale parameter =   3.493518
+Deviance         =  5254.250412                   (1/df) Deviance =   3.493518
+Pearson          =  5254.250412                   (1/df) Pearson  =   3.493518
+
+Variance function: V(u) = 1                       [Gaussian]
+Link function    : g(u) = u                       [Identity]
+
+                                                  AIC             =   4.090113
+Log likelihood   = -3077.855338                   BIC             =  -5750.837
+
+------------------------------------------------------------------------------
+             |                 OIM
+       MYRED |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+     DIFFATT |  -.0311871   .0485961    -0.64   0.521    -.1264337    .0640595
+       _cons |  -.2249012   .0489978    -4.59   0.000    -.3209351   -.1288673
+       FYRED |          1  (offset)
+------------------------------------------------------------------------------
+
+. 
+. //run the conventional model in glm to get model comparison stats
+. glm MYRED DIFFATT FYRED MATT
+
+Iteration 0:   log likelihood = -2881.5619  
+
+Generalized linear models                         No. of obs      =      1,506
+Optimization     : ML                             Residual df     =      1,502
+                                                  Scale parameter =    2.69543
+Deviance         =    4048.5364                   (1/df) Deviance =    2.69543
+Pearson          =    4048.5364                   (1/df) Pearson  =    2.69543
+
+Variance function: V(u) = 1                       [Gaussian]
+Link function    : g(u) = u                       [Identity]
+
+                                                  AIC             =   3.832087
+Log likelihood   = -2881.561854                   BIC             =  -6941.917
+
+------------------------------------------------------------------------------
+             |                 OIM
+       MYRED |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+     DIFFATT |  -.1732362   .0510245    -3.40   0.001    -.2732425     -.07323
+       FYRED |   .5421693   .0217578    24.92   0.000     .4995248    .5848137
+        MATT |   .3665886   .0679539     5.39   0.000     .2334014    .4997759
+       _cons |   4.417297   .3427777    12.89   0.000     3.745465    5.089129
+------------------------------------------------------------------------------
+
+. 
+. //look at the correlations
+. correlate DIFFEDU DIFFATT MYRED FYRED MATT FATT
+(obs=1,506)
+
+             |  DIFFEDU  DIFFATT    MYRED    FYRED     MATT     FATT
+-------------+------------------------------------------------------
+     DIFFEDU |   1.0000
+     DIFFATT |  -0.0165   1.0000
+       MYRED |   0.4806  -0.0056   1.0000
+       FYRED |  -0.4633   0.0100   0.5545   1.0000
+        MATT |   0.0315   0.5440   0.1648   0.1366   1.0000
+        FATT |   0.0467  -0.6787   0.1507   0.1080   0.2471   1.0000
+
+
+. 
+. //Now try to do McClintock's actual models
+. 
+. //deal with missing values 
+. replace RELTYPE=4 if RELTYPE==.
+(105 real changes made)
+
+. generate MISSDUR = DURATION==.
+
+. replace DURATION=38 if MISSDUR
+(226 real changes made)
+
+. 
+. // she standardized all non-dichotomous variables
+. egen mMYRED = mean(MYRED)
+
+. egen sMYRED = sd(MYRED)
+
+. generate zMYRED = (MYRED-mMYRED)/sMYRED
+(1 missing value generated)
+
+. 
+. egen mFYRED = mean(FYRED)
+
+. egen sFYRED = sd(FYRED)
+
+. generate zFYRED = (FYRED-mFYRED)/sFYRED
+
+. 
+. egen mMATT = mean(MATT)
+
+. egen sMATT = sd(MATT)
+
+. generate zMATT = (MATT-mMATT)/sMATT
+
+. 
+. egen mFATT = mean(FATT)
+
+. egen sFATT = sd(FATT)
+
+. generate zFATT = (FATT-mFATT)/sFATT
+
+. 
+. egen mDUR = mean(DURATION)
+
+. egen sDUR = sd(DURATION)
+
+. generate zDUR = (DURATION-mDUR)/sDUR
+
+. 
+. egen mMAGE = mean(MAGE)
+
+. egen sMAGE = sd(MAGE)
+
+. generate zMAGE = (MAGE-mMAGE)/sMAGE
+
+. 
+. egen mFAGE = mean(FAGE)
+
+. egen sFAGE = sd(FAGE)
+
+. generate zFAGE = (FAGE-mFAGE)/sFAGE
+
+. 
+. //conventional
+. regress zMYRED zFATT zFYRED zMATT
+
+      Source |       SS           df       MS      Number of obs   =     1,506
+-------------+----------------------------------   F(3, 1502)      =    236.48
+       Model |  482.816917         3  160.938972   Prob > F        =    0.0000
+    Residual |  1022.18304     1,502   .68054796   R-squared       =    0.3208
+-------------+----------------------------------   Adj R-squared   =    0.3195
+       Total |  1504.99995     1,505  .999999968   Root MSE        =    .82495
+
+------------------------------------------------------------------------------
+      zMYRED |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       zFATT |   .0747195   .0220077     3.40   0.001     .0315505    .1178885
+      zFYRED |   .5363692    .021525    24.92   0.000     .4941469    .5785915
+       zMATT |   .0729903   .0220846     3.31   0.001     .0296704    .1163101
+       _cons |  -.0002374   .0212577    -0.01   0.991    -.0419354    .0414606
+------------------------------------------------------------------------------
+
+. regress zMYRED zFATT zFYRED zMATT zFAGE zMAGE i.FRACE i.MRACE i.RELTYPE PREGNA
+> NT zDUR MISSDUR
+
+      Source |       SS           df       MS      Number of obs   =     1,506
+-------------+----------------------------------   F(15, 1490)     =     54.07
+       Model |  530.480574        15  35.3653716   Prob > F        =    0.0000
+    Residual |  974.519378     1,490  .654039851   R-squared       =    0.3525
+-------------+----------------------------------   Adj R-squared   =    0.3460
+       Total |  1504.99995     1,505  .999999968   Root MSE        =    .80873
+
+------------------------------------------------------------------------------
+      zMYRED |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       zFATT |   .0665667   .0218937     3.04   0.002     .0236209    .1095124
+      zFYRED |   .5082446   .0223214    22.77   0.000     .4644599    .5520293
+       zMATT |   .0739836   .0217324     3.40   0.001     .0313543    .1166128
+       zFAGE |  -.0100356   .0238339    -0.42   0.674    -.0567872     .036716
+       zMAGE |   .1272834   .0227365     5.60   0.000     .0826844    .1718823
+             |
+       FRACE |
+          2  |   .2073468   .1043733     1.99   0.047     .0026125    .4120811
+          3  |   .0918867   .0706818     1.30   0.194    -.0467597    .2305332
+             |
+       MRACE |
+          2  |  -.3492697   .1007537    -3.47   0.001     -.546904   -.1516355
+          3  |  -.1312724     .07063    -1.86   0.063    -.2698172    .0072725
+             |
+     RELTYPE |
+          2  |  -.2581168   .0559468    -4.61   0.000    -.3678597   -.1483739
+          3  |  -.2391366   .0619469    -3.86   0.000     -.360649   -.1176242
+          4  |  -.2044806    .113079    -1.81   0.071    -.4262914    .0173303
+             |
+    PREGNANT |  -.0968106   .0854397    -1.13   0.257    -.2644055    .0707843
+        zDUR |  -.0511337   .0231963    -2.20   0.028    -.0966345   -.0056329
+     MISSDUR |  -.0567125   .0772749    -0.73   0.463    -.2082917    .0948667
+       _cons |   .2307289   .0485601     4.75   0.000     .1354754    .3259823
+------------------------------------------------------------------------------
+
+. regress zFYRED zFATT zMYRED zMATT
+
+      Source |       SS           df       MS      Number of obs   =     1,506
+-------------+----------------------------------   F(3, 1502)      =    224.77
+       Model |  466.546973         3  155.515658   Prob > F        =    0.0000
+    Residual |    1039.218     1,502  .691889481   R-squared       =    0.3098
+-------------+----------------------------------   Adj R-squared   =    0.3085
+       Total |  1505.76497     1,505  1.00050829   Root MSE        =     .8318
+
+------------------------------------------------------------------------------
+      zFYRED |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       zFATT |   .0152101   .0222718     0.68   0.495    -.0284771    .0588973
+      zMYRED |    .545308   .0218837    24.92   0.000      .502382    .5882339
+       zMATT |   .0430162   .0223211     1.93   0.054    -.0007675       .0868
+       _cons |   .0002972   .0214341     0.01   0.989    -.0417468    .0423413
+------------------------------------------------------------------------------
+
+. regress zFYRED zMATT zMYRED zFATT zFAGE zMAGE i.FRACE i.MRACE i.RELTYPE PREGNA
+> NT zDUR MISSDUR
+
+      Source |       SS           df       MS      Number of obs   =     1,506
+-------------+----------------------------------   F(15, 1490)     =     54.26
+       Model |  531.924811        15  35.4616541   Prob > F        =    0.0000
+    Residual |  973.840163     1,490  .653584002   R-squared       =    0.3533
+-------------+----------------------------------   Adj R-squared   =    0.3467
+       Total |  1505.76497     1,505  1.00050829   Root MSE        =    .80845
+
+------------------------------------------------------------------------------
+      zFYRED |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       zMATT |   .0383487   .0217865     1.76   0.079    -.0043867    .0810841
+      zMYRED |   .5078903   .0223058    22.77   0.000     .4641361    .5516445
+       zFATT |   .0265932    .021943     1.21   0.226    -.0164493    .0696358
+       zFAGE |   .2124735   .0231825     9.17   0.000     .1669997    .2579473
+       zMAGE |  -.0651113   .0229043    -2.84   0.005    -.1100395   -.0201832
+             |
+       FRACE |
+          2  |   -.075408   .1044568    -0.72   0.470     -.280306      .12949
+          3  |  -.0638635   .0706779    -0.90   0.366    -.2025023    .0747752
+             |
+       MRACE |
+          2  |   .0959822   .1010934     0.95   0.343    -.1023183    .2942827
+          3  |  -.0008027   .0706872    -0.01   0.991    -.1394597    .1378543
+             |
+     RELTYPE |
+          2  |  -.1692534   .0561545    -3.01   0.003    -.2794036   -.0591032
+          3  |  -.1337513   .0621377    -2.15   0.032    -.2556379   -.0118647
+          4  |   .0122692   .1131631     0.11   0.914    -.2097066    .2342451
+             |
+    PREGNANT |  -.1427566   .0853667    -1.67   0.095    -.3102082     .024695
+        zDUR |  -.0549536   .0231823    -2.37   0.018     -.100427   -.0094802
+     MISSDUR |   -.092223    .077225    -1.19   0.233    -.2437043    .0592583
+       _cons |   .1312977   .0487911     2.69   0.007     .0355911    .2270043
+------------------------------------------------------------------------------
+
+. 
+. //diff models
+. generate DIFFAGE = MAGE-FAGE
+
+. regress DIFFEDU DIFFATT i.FRACE i.MRACE  i.RELTYPE PREGNANT zDUR MISSDUR DIFFA
+> GE
+
+      Source |       SS           df       MS      Number of obs   =     1,506
+-------------+----------------------------------   F(12, 1493)     =      4.15
+       Model |  169.657639        12  14.1381365   Prob > F        =    0.0000
+    Residual |   5086.0316     1,493  3.40658513   R-squared       =    0.0323
+-------------+----------------------------------   Adj R-squared   =    0.0245
+       Total |  5255.68924     1,505  3.49215232   Root MSE        =    1.8457
+
+------------------------------------------------------------------------------
+     DIFFEDU |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+     DIFFATT |  -.0164099   .0482799    -0.34   0.734    -.1111136    .0782937
+             |
+       FRACE |
+          2  |   .3243332   .2374269     1.37   0.172    -.1413925     .790059
+          3  |   .1912344   .1611536     1.19   0.236    -.1248772     .507346
+             |
+       MRACE |
+          2  |  -.5702272   .2297479    -2.48   0.013     -1.02089   -.1195642
+          3  |  -.1836086   .1610602    -1.14   0.254    -.4995368    .1323197
+             |
+     RELTYPE |
+          2  |  -.1833045   .1240771    -1.48   0.140    -.4266883    .0600794
+          3  |   -.225512   .1362319    -1.66   0.098    -.4927383    .0417142
+          4  |  -.3440244   .2569811    -1.34   0.181    -.8481067     .160058
+             |
+    PREGNANT |    .067931   .1943531     0.35   0.727    -.3133031    .4491651
+        zDUR |  -.0091313   .0521909    -0.17   0.861    -.1115066    .0932441
+     MISSDUR |   .0298689   .1759637     0.17   0.865    -.3152935    .3750313
+     DIFFAGE |   .0887555   .0144719     6.13   0.000     .0603681    .1171428
+       _cons |  -.1684053   .1097787    -1.53   0.125    -.3837422    .0469317
+------------------------------------------------------------------------------
+
+. 
+. 
+. 
+end of do-file
+
+.                           log close
+      name:  <unnamed>
+       log:  /home/aarong/Private/AddHealth/regmodels.txt
+  log type:  text
+ closed on:  24 Jun 2016, 14:41:46
+--------------------------------------------------------------------------------

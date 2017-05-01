@@ -1,0 +1,1046 @@
+---------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /home/aarong/Private/AddHealth/organizedata_rd2.txt
+  log type:  text
+ opened on:  24 Jun 2016, 14:32:32
+
+/***NOTE: I have made some changes to the comments here manually after running the do file***/
+
+. do organizedata.do
+
+. /* 
+> Aaron Gullickson
+> organizedata.do
+> 
+> This code should create the the data used in McClintock's analysis for
+> both the regression models and the log linear models. McClintock has
+> provided also provided me with do files and log files that allow me to
+> make some comparisons and check my coding vs hers.
+>
+> This script will load both the Wave III respondent data and the
+> romantic partner data and will code and keep the variables we need. It
+> will then merge the two datasets and rename things based on female vs
+> male characteristics to produce the matched partner data.
+> 
+> In compiling these data, I have noted some oddities in the romantic
+> pair data. However, after some experimentation I was able to produce a
+> sample size and a distribution of characteristics for each partner's
+> education and attractiveness that exactly match McClintock's. Since my
+> goal is replication I have not pursued the reason for these oddities,
+> but I document them here for others who might use this data. First,
+> the romantic pairs data was supposed to be only of heterosexual
+> couples but based on the reported sex of both partners, I am finding a
+> few same sex couples. This occurs regardless of whether one takes wave
+> 1 or wave 3 reported sex. I found that my partner characteristics
+> matched McClintock's if I assumed that the ego respondent's sex was
+> correct and switched the partner's sex to produce a heterosexual
+> couple.
+
+> Second, the labeling of the id to match partners and respondents seems
+> backwards to me in the partner3.dta file. The AID actually matches the
+> IDs from the partner data set and the P_AID matches the IDs in the ego
+> respondent sample. I assume this is just a labeling issue, but it was
+> initially very puzzling.
+> */
+. 
+. /*
+> WAVE III Home Data
+> */
+. 
+. clear
+
+. import sasxport Data/allwave1.xpt
+
+. keep aid bio_sex
+
+. save gender_w1.dta, replace
+file gender_w1.dta saved
+
+. 
+. //get relationship stuff
+. clear
+
+. import sasxport Data/sect19.xpt
+
+. keep aid rrelno h3rd6m h3rd6y
+
+. save relatd.dta, replace
+file relatd.dta saved
+
+. 
+. 
+. clear
+
+. import sasxport Data/sect17.xpt
+
+. merge 1:1 aid rrelno using relatd.dta
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                         3,959
+        from master                     3,959  (_merge==1)
+        from using                          0  (_merge==2)
+
+    matched                            38,375  (_merge==3)
+    -----------------------------------------
+
+. drop if _merge!=3
+(3,959 observations deleted)
+
+. drop _merge
+
+. 
+. keep if cp==1
+(34,395 observations deleted)
+
+. 
+. duplicates report aid
+
+Duplicates in terms of aid
+
+--------------------------------------
+   copies | observations       surplus
+----------+---------------------------
+        1 |         3980             0
+--------------------------------------
+
+. table h3tr1
+
+----------------------
+S17Q1     |
+RELATIONS |
+HIP       |
+CURRENT?- |
+W3        |      Freq.
+----------+-----------
+        1 |      3,980
+----------------------
+
+. 
+. //need to code relationship status
+. //not sure how to handle missings, surprised they are included - will treat as zeros
+. generate RELTYPE = 1
+
+. replace RELTYPE = 2 if h3tr11==1 & h3tr12!=1
+(989 real changes made)
+
+. replace RELTYPE = 3 if h3tr12==1
+(1,004 real changes made)
+
+. replace h3rd6y=. if h3rd6y>2002
+(417 real changes made, 417 to missing)
+
+. replace h3rd6m=. if h3rd6m>12
+(449 real changes made, 449 to missing)
+
+. 
+. keep aid RELTYPE h3rd6m h3rd6y
+
+. save relationship.dta, replace
+file relationship.dta saved
+
+. 
+. //get pregnancy stuff
+. clear
+
+. import sasxport Data/sect18.xpt
+
+. keep if h3tp1==5
+(6,886 observations deleted)
+
+. duplicates drop aid, force
+
+Duplicates in terms of aid
+
+(17 observations deleted)
+
+. generate PREGNANT = 1
+
+. keep aid PREGNANT
+
+. save pregnancy.dta, replace
+file pregnancy.dta saved
+
+. 
+. clear
+
+. import sasxport Data/wave3.xpt
+
+. 
+. merge 1:1 aid using gender_w1.dta
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                         5,602
+        from master                        27  (_merge==1)
+        from using                      5,575  (_merge==2)
+
+    matched                            15,170  (_merge==3)
+    -----------------------------------------
+
+. drop if _merge==2
+(5,575 observations deleted)
+
+. drop _merge
+
+. 
+. merge 1:1 aid using relationship.dta
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                        11,217
+        from master                    11,217  (_merge==1)
+        from using                          0  (_merge==2)
+
+    matched                             3,980  (_merge==3)
+    -----------------------------------------
+
+. drop if _merge==2
+(0 observations deleted)
+
+. drop _merge
+
+. 
+. merge 1:1 aid using pregnancy.dta
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                        14,678
+        from master                    14,678  (_merge==1)
+        from using                          0  (_merge==2)
+
+    matched                               519  (_merge==3)
+    -----------------------------------------
+
+. drop if _merge==2
+(0 observations deleted)
+
+. drop _merge
+
+. replace PREGNANT=0 if PREGNANT==.
+(14,678 real changes made)
+
+. 
+. /*relationship duration*/
+. generate currentdate = iyear3+((imonth3-1)/12)
+
+. generate relatedate = h3rd6y+((h3rd6m-1)/12)
+(11,671 missing values generated)
+
+. generate DURATION = (currentdate-relatedate)*12
+(11,671 missing values generated)
+
+. replace DURATION=. if DURATION<0
+(9 real changes made, 9 to missing)
+
+. 
+. /*
+> YEARS OF EDUCATION
+> McClintock just directly coded four categories off of years of
+> education, without consideration for actual degree, here is her code:
+> recode m3_yrsedu 0/11=1 12=2 13/15=3 16/25=4, gen(m3_edu4)
+> recode f3_yrsedu 0/11=1 12=2 13/15=3 16/25=4, gen(f3_edu4)
+> 
+> Highest grade is given by H3ED1, so lets code from that
+> */
+. recode h3ed1 0/11=1 12=2 13/15=3 16/25=4, gen(EDU)
+(15183 differences between h3ed1 and EDU)
+
+. replace EDU=. if EDU>4
+(13 real changes made, 13 to missing)
+
+. 
+. 
+. /**now recode h3ed1 into yrsed**/
+. generate YRED=h3ed1
+(1 missing value generated)
+
+. replace YRED=. if h3ed1>=96
+(13 real changes made, 13 to missing)
+
+. 
+. /*
+> Here is some old code I put together for education based on combining information about
+> years of ed and degree receipt before I realized McClintock actually sent us her code.
+> This variable should be better than McClintock's because it does not simply figure out
+> degree receipt from years of education. I will keep it for comparison sake. One issue
+> is how to treat GEDs. I will exclude them here from HS diploma 
+> */
+. generate EDU2 = .
+(15,197 missing values generated)
+
+. replace EDU2 = 1 if h3ed1>1 & h3ed1<=12
+(6,997 real changes made)
+
+. //assuming GED's don't count here
+. replace EDU2 = 2 if h3ed1==12 & h3ed3==1 //high school diplma
+(4,603 real changes made)
+
+. replace EDU2 = 3 if h3ed1>12
+(8,200 real changes made)
+
+. replace EDU2 = 4 if h3ed5==1 | h3ed6==1 | h3ed7==1 | h3ed8==1 
+(1,723 real changes made)
+
+. //how to deal with missing values - for now just add in the three
+. //that are missing across all degree cateogories
+. replace EDU2 = . if h3ed3>=6 | h3ed5>=6
+(12 real changes made, 12 to missing)
+
+. //TODO: not capturing all of the later missing values
+. 
+. /*
+> EXPECTED COLLEGE GRAD
+> McClintock didn't provide code for her expected college grad but per
+> the article this should be straightforward to calculate as individuals
+> who have completed or are currently enrolled in four year degree
+> program. One question however is whether McClintock actually coded
+> this off of the questions about degree receipt or just simply off of
+> years of education. Given the way she coded EDU, I am going to assume
+> she did it simply. 
+> */
+. 
+. generate GRAD = EDU==4
+
+. replace GRAD = 1 if h3ed26==3
+(2,744 real changes made)
+
+. // | h3ed26==4 - This is the grad schol group that are excluded
+. replace GRAD = . if EDU==. | h3ed26==6 | h3ed26>7
+(80 real changes made, 80 to missing)
+
+. 
+. generate GRAD2 = EDU2==4
+
+. replace GRAD2 = 1 if h3ed26==3 | h3ed26==4
+(3,280 real changes made)
+
+. replace GRAD2 = . if EDU2==. | h3ed26==6 | h3ed26>7
+(77 real changes made, 77 to missing)
+
+. 
+. 
+. /*
+> ATTRACTIVENESS
+> This one should be easy to code. I just need to collapse the two
+> bottom categories as McClintock did.
+> */
+. 
+. generate ATT = h3ir1
+(18 missing values generated)
+
+.     
+. generate ATTCAT = ATT
+(18 missing values generated)
+
+. replace ATTCAT = 2 if ATTCAT==1
+(294 real changes made)
+
+. 
+. rename bio_sex SEX1
+
+. rename bio_sex3 SEX3
+
+. rename aid AID
+
+. 
+. /*
+> *Race - which best describes you? 
+> * McClintock coded as white NH, Black NH, everybody else
+> * I will ignore missing values here
+> */
+. 
+. generate hispanic = h3od2==1
+
+. generate multi = h3od6!=7
+
+. 
+. generate RACE = 3
+
+. replace RACE = 1 if !hispanic & ((!multi & h3od4a==1) | h3od6==1)
+(8,173 real changes made)
+
+. replace RACE = 2 if !hispanic & ((!multi & h3od4b==1) | h3od6==2)
+(3,295 real changes made)
+
+. 
+. generate AGE = calcage3
+
+. 
+. keep AID SEX1 SEX3 EDU YRED EDU2 GRAD GRAD2 ATT ATTCAT RACE AGE RELTYPE PREGNANT DURATION
+
+. 
+. save ego, replace
+file ego.dta saved
+
+. 
+. /*
+> ROMANTIC PARTNER DATA
+> */
+. 
+. clear
+
+. import sasxport Data/wave3p.xpt
+
+. 
+. 
+. recode h3ed1 0/11=1 12=2 13/15=3 16/25=4, gen(PEDU)
+(1506 differences between h3ed1 and PEDU)
+
+. replace PEDU=. if PEDU>4
+(1 real change made, 1 to missing)
+
+. 
+. 
+. generate PYRED=h3ed1
+
+. replace PYRED=. if h3ed1>=96
+(1 real change made, 1 to missing)
+
+. 
+. 
+. generate PEDU2 = .
+(1,507 missing values generated)
+
+. replace PEDU2 = 1 if h3ed1>1 & h3ed1<=12
+(830 real changes made)
+
+. replace PEDU2 = 2 if h3ed1==12 & h3ed3==1
+(486 real changes made)
+
+. replace PEDU2 = 3 if h3ed1>12
+(677 real changes made)
+
+. replace PEDU2 = 4 if h3ed5==1 | h3ed6==1 | h3ed7==1 | h3ed8==1
+(147 real changes made)
+
+. replace PEDU2 = . if h3ed3>=6 | h3ed5>=6
+(0 real changes made)
+
+. 
+. generate PGRAD = PEDU==4
+
+. replace PGRAD = 1 if h3ed26==3
+(177 real changes made)
+
+. // | h3ed26==4
+. replace PGRAD = . if PEDU==. | h3ed26==6 | h3ed26>7
+(10 real changes made, 10 to missing)
+
+. 
+. generate PGRAD2 = PEDU2==4
+
+. replace PGRAD2 = 1 if h3ed26==3 | h3ed26==4
+(212 real changes made)
+
+. replace PGRAD2 = . if PEDU2==. | h3ed26==6 | h3ed26>7
+(9 real changes made, 9 to missing)
+
+. 
+. generate PATT = h3ir1
+
+. generate PATTCAT = PATT
+
+. replace PATTCAT = 2 if PATTCAT==1
+(20 real changes made)
+
+. 
+. rename bio_sex3 PSEX
+
+. rename aid AID
+
+. 
+. /*
+> *Race - which best describes you? 
+> * McClintock coded as white NH, Black NH, everybody else
+> * I will ignore missing values here
+> */
+. generate hispanic = h3od2==1
+
+. generate multi = h3od6!=7
+
+. 
+. generate PRACE = 3
+
+. replace PRACE = 1 if !hispanic & ((!multi & h3od4a==1) | h3od6==1)
+(919 real changes made)
+
+. replace PRACE = 2 if !hispanic & ((!multi & h3od4b==1) | h3od6==2)
+(252 real changes made)
+
+. 
+. generate PAGE = calcage3
+
+. 
+. keep AID PSEX PEDU PEDU2 PYRED PGRAD PGRAD2 PATT PATTCAT PRACE PAGE
+
+. save partner, replace
+file partner.dta saved
+
+. 
+. clear
+
+. import sasxport Data/partner3.xpt
+
+. rename aid AID
+
+. merge 1:1 AID using partner
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                             0
+    matched                             1,507  (_merge==3)
+    -----------------------------------------
+
+. drop _merge
+
+. drop AID
+
+. rename p_aid AID
+
+. save partner, replace
+file partner.dta saved
+
+. 
+. 
+. /*
+> MERGE DATA SETS
+> */
+. 
+. clear
+
+. use ego, replace
+
+. merge 1:1 AID using partner
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                        13,690
+        from master                    13,690  (_merge==1)
+        from using                          0  (_merge==2)
+
+    matched                             1,507  (_merge==3)
+    -----------------------------------------
+
+. 
+. keep if _merge==3
+(13,690 observations deleted)
+
+. drop _merge
+
+. 
+. table SEX1 PSEX
+
+/***RESULTS SUPPRESSED FOR ADDHEALTH PRIVACY RULES****/
+
+. table SEX3 PSEX
+
+/***RESULTS SUPPRESSED FOR ADDHEALTH PRIVACY RULES****/
+
+. table SEX1 SEX3
+
+/***RESULTS SUPPRESSED FOR ADDHEALTH PRIVACY RULES****/
+
+. 
+. //I am finding some same sex couples. Its better if I use wave 3, but still problematic.
+. //I have found that if I 'correct' the partner's sex based on ego's sex then I get results for 
+. //the tabulations of educ and attractiveness that exactly match McClintock.
+. rename SEX3 SEX
+
+. replace PSEX=2 if SEX==PSEX & SEX==1
+(2 real changes made)
+
+. replace PSEX=1 if SEX==PSEX & SEX==2
+(8 real changes made)
+
+. 
+. //now code female and male
+. generate FYRED=.
+(1,507 missing values generated)
+
+. generate MYRED=.
+(1,507 missing values generated)
+
+. generate FEDU=.
+(1,507 missing values generated)
+
+. generate MEDU=.
+(1,507 missing values generated)
+
+. generate FEDU2=.
+(1,507 missing values generated)
+
+. generate MEDU2=.
+(1,507 missing values generated)
+
+. generate FGRAD=.
+(1,507 missing values generated)
+
+. generate MGRAD=.
+(1,507 missing values generated)
+
+. generate FGRAD2=.
+(1,507 missing values generated)
+
+. generate MGRAD2=.
+(1,507 missing values generated)
+
+. generate FATT=.
+(1,507 missing values generated)
+
+. generate MATT=.
+(1,507 missing values generated)
+
+. generate FATTCAT=.
+(1,507 missing values generated)
+
+. generate MATTCAT=.
+(1,507 missing values generated)
+
+. generate FRACE=.
+(1,507 missing values generated)
+
+. generate MRACE=.
+(1,507 missing values generated)
+
+. generate FAGE=.
+(1,507 missing values generated)
+
+. generate MAGE=.
+(1,507 missing values generated)
+
+. 
+. replace MYRED = YRED if SEX==1
+(692 real changes made)
+
+. replace FYRED = YRED if SEX==2
+(815 real changes made)
+
+. replace MYRED = PYRED if PSEX==1
+(814 real changes made)
+
+. replace FYRED = PYRED if PSEX==2
+(692 real changes made)
+
+. 
+. replace MEDU = EDU if SEX==1
+(692 real changes made)
+
+. replace FEDU = EDU if SEX==2
+(815 real changes made)
+
+. replace MEDU = PEDU if PSEX==1
+(814 real changes made)
+
+. replace FEDU = PEDU if PSEX==2
+(692 real changes made)
+
+. 
+. replace MGRAD = GRAD if SEX==1
+(692 real changes made)
+
+. replace FGRAD = GRAD if SEX==2
+(812 real changes made)
+
+. replace MGRAD = PGRAD if PSEX==1
+(808 real changes made)
+
+. replace FGRAD = PGRAD if PSEX==2
+(689 real changes made)
+
+. 
+. replace MEDU2 = EDU2 if SEX==1
+(692 real changes made)
+
+. replace FEDU2 = EDU2 if SEX==2
+(814 real changes made)
+
+. replace MEDU2 = PEDU2 if PSEX==1
+(815 real changes made)
+
+. replace FEDU2 = PEDU2 if PSEX==2
+(692 real changes made)
+
+. 
+. replace MGRAD2 = GRAD2 if SEX==1
+(692 real changes made)
+
+. replace FGRAD2 = GRAD2 if SEX==2
+(811 real changes made)
+
+. replace MGRAD2 = PGRAD2 if PSEX==1
+(809 real changes made)
+
+. replace FGRAD2 = PGRAD2 if PSEX==2
+(689 real changes made)
+
+. 
+. replace MATT = ATT if SEX==1
+(692 real changes made)
+
+. replace FATT = ATT if SEX==2
+(815 real changes made)
+
+. replace MATT = PATT if PSEX==1
+(815 real changes made)
+
+. replace FATT = PATT if PSEX==2
+(692 real changes made)
+
+. 
+. replace MATTCAT = ATTCAT if SEX==1
+(692 real changes made)
+
+. replace FATTCAT = ATTCAT if SEX==2
+(815 real changes made)
+
+. replace MATTCAT = PATTCAT if PSEX==1
+(815 real changes made)
+
+. replace FATTCAT = PATTCAT if PSEX==2
+(692 real changes made)
+
+. 
+. replace MAGE = AGE if SEX==1
+(692 real changes made)
+
+. replace FAGE = AGE if SEX==2
+(815 real changes made)
+
+. replace MAGE = PAGE if PSEX==1
+(815 real changes made)
+
+. replace FAGE = PAGE if PSEX==2
+(692 real changes made)
+
+. 
+. replace MRACE = RACE if SEX==1
+(692 real changes made)
+
+. replace FRACE = RACE if SEX==2
+(815 real changes made)
+
+. replace MRACE = PRACE if PSEX==1
+(815 real changes made)
+
+. replace FRACE = PRACE if PSEX==2
+(692 real changes made)
+
+. 
+. /*
+> COMPARE TO McClintock's results
+> */
+. 
+. tabulate FEDU
+
+       FEDU |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |        242       16.06       16.06
+          2 |        537       35.63       51.69
+          3 |        531       35.24       86.93
+          4 |        197       13.07      100.00
+------------+-----------------------------------
+      Total |      1,507      100.00
+
+. 
+. /*
+> -> tabulation of f3_edu4
+> RECODE of |
+>   f3_yrsedu |
+> (W3 - Years |
+>      of Edu) |      Freq.     Percent        Cum.
+> ------------+-----------------------------------
+> 1|                   242        16.06
+> 2|                   537        35.63
+> 3|                   531        35.24
+> 4|                   197        13.07
+> ------------+-----------------------------------
+> Total |            1,507
+> */
+. 
+. tabulate MEDU
+
+       MEDU |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |        287       19.06       19.06
+          2 |        586       38.91       57.97
+          3 |        466       30.94       88.91
+          4 |        167       11.09      100.00
+------------+-----------------------------------
+      Total |      1,506      100.00
+
+. 
+. /*
+> -> tabulation of m3_edu4
+> RECODE of |
+>   m3_yrsedu |
+> (W3 - Years |
+>      of Edu) |      Freq.     Percent
+> ------------+-----------------------------------
+> 1|                    287       19.06
+> 2|                    586       38.91
+> 3|                    466       30.94
+> 4|                    167       11.09
+> ------------+-----------------------------------
+> Total |             1,506 
+> */
+. 
+. tabulate FGRAD
+
+      FGRAD |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |      1,087       72.42       72.42
+          1 |        414       27.58      100.00
+------------+-----------------------------------
+      Total |      1,501      100.00
+
+. 
+. /*
+> -> tabulation of f3_ee_cgrdp
+> Clg Grad or |
+>        More |      Freq.     Percent        Cum.
+> ------------+-----------------------------------
+>           0 |      1,096       72.78       72.78
+>           1 |        410       27.22      100.00
+> ------------+-----------------------------------
+>       Total |      1,506      100.00
+> */
+. 
+. tabulate MGRAD
+
+      MGRAD |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |      1,169       77.93       77.93
+          1 |        331       22.07      100.00
+------------+-----------------------------------
+      Total |      1,500      100.00
+
+. 
+. /*
+> -> tabulation of m3_ee_cgrdp
+> Clg Grad or |
+>        More |      Freq.     Percent        Cum.
+> ------------+-----------------------------------
+>           0 |      1,172       77.93       77.93
+>           1 |        332       22.07      100.00
+> ------------+-----------------------------------
+>           Total |      1,504      100.00
+> */
+. 
+. tabulate FATTCAT
+
+    FATTCAT |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          2 |         87        5.77        5.77
+          3 |        596       39.55       45.32
+          4 |        586       38.89       84.21
+          5 |        238       15.79      100.00
+------------+-----------------------------------
+      Total |      1,507      100.00
+
+. 
+. /*
+> -> tabulation of f3_physatt4
+> RECODE of |
+>  f3_physatt |      Freq.     Percent        Cum.
+>            2|         87        5.77
+>            3|        596       39.55
+>            4|        586       38.89
+>            5|        238       15.79
+> ------------+-----------------------------------
+>       Total |      1,507      100.00
+> */
+. 
+. tabulate MATTCAT
+
+    MATTCAT |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          2 |         85        5.64        5.64
+          3 |        777       51.56       57.20
+          4 |        521       34.57       91.77
+          5 |        124        8.23      100.00
+------------+-----------------------------------
+      Total |      1,507      100.00
+
+. 
+. /*
+> -> tabulation of m3_physatt4
+>   RECODE of |
+>  m3_physatt |
+>       (W3 - |
+> Interviewer |
+>      -rated |
+>    physical |
+> attractiven |
+>        ess) |
+>                    Freq.     Percent        Cum.
+> ------------+-----------------------------------
+>            2|     85         5.64
+>            3|    777        51.56
+>            4|    521        34.57
+>            5|    124         8.23
+> ------------+-----------------------------------
+>       Total |   1,507      100.00
+> */
+. 
+. tabulate FRACE
+
+      FRACE |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |        930       61.71       61.71
+          2 |        246       16.32       78.04
+          3 |        331       21.96      100.00
+------------+-----------------------------------
+      Total |      1,507      100.00
+
+. tabulate MRACE
+
+      MRACE |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |        898       59.59       59.59
+          2 |        274       18.18       77.77
+          3 |        335       22.23      100.00
+------------+-----------------------------------
+      Total |      1,507      100.00
+
+. summarize FATT FGRAD FYRED FAGE PREGNANT DURATION
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+        FATT |      1,507    3.629064    .8583807          1          5
+       FGRAD |      1,501    .2758161    .4470735          0          1
+       FYRED |      1,507    12.95421    1.968855          6         20
+        FAGE |      1,507    21.85136    2.373871         18         40
+    PREGNANT |      1,507     .066357    .2489877          0          1
+-------------+---------------------------------------------------------
+    DURATION |      1,281    38.12179    26.53207          0   142.9995
+
+. summarize MATT MGRAD MYRED MAGE 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+        MATT |      1,507    3.443928    .7512769          1          5
+       MGRAD |      1,500    .2206667    .4148344          0          1
+       MYRED |      1,506    12.73572    1.990145          7         21
+        MAGE |      1,507    23.48109    3.302401         18         43
+
+. tabulate RELTYPE
+
+    RELTYPE |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |        414       29.53       29.53
+          2 |        500       35.66       65.19
+          3 |        488       34.81      100.00
+------------+-----------------------------------
+      Total |      1,402      100.00
+
+. 
+. //HOPEFULLY THIS LINE UP PRETTY CLOSELY
+.   
+. drop EDU PEDU EDU2 PEDU2 GRAD PGRAD GRAD2 PGRAD2 ATT PATT SEX PSEX RACE PRACE AGE PAGE YRED PYRED ATTCAT PATTCAT
+
+. 
+. /*
+> NOW MAKE THE TABLES
+> */
+. 
+. save fulldata, replace
+file fulldata.dta saved
+
+. 
+. drop if MEDU==. | FEDU==.
+(1 observation deleted)
+
+. drop MATT FATT
+
+. rename MATTCAT MATT
+
+. rename FATTCAT FATT
+
+. contract MEDU FEDU MATT FATT, zero
+
+. rename _freq Freq
+
+. saveold table_yrsed.dta, replace version(12)
+(saving in Stata 12 format, which can be read by Stata 11 or 12)
+file table_yrsed.dta saved
+
+. 
+. use fulldata, clear
+
+. drop if MEDU2==. | FEDU2==.
+(1 observation deleted)
+
+. drop MATT FATT
+
+. rename MATTCAT MATT
+
+. rename FATTCAT FATT
+
+. contract MEDU2 FEDU2 MATT FATT, zero
+
+. rename _freq Freq
+
+. saveold table_yrsed_better.dta, replace version(12)
+(saving in Stata 12 format, which can be read by Stata 11 or 12)
+file table_yrsed_better.dta saved
+
+. 
+. 
+. use fulldata, clear
+
+. drop if MGRAD==. | FGRAD==.
+(13 observations deleted)
+
+. drop MATT FATT
+
+. rename MATTCAT MATT
+
+. rename FATTCAT FATT
+
+. contract MGRAD FGRAD MATT FATT, zero
+
+. rename _freq Freq
+
+. saveold table_grad.dta, replace version(12)
+(saving in Stata 12 format, which can be read by Stata 11 or 12)
+file table_grad.dta saved
+
+. 
+. use fulldata, clear
+
+. drop if MGRAD2==. | FGRAD2==.
+(13 observations deleted)
+
+. drop MATT FATT
+
+. rename MATTCAT MATT
+
+. rename FATTCAT FATT
+
+. contract MGRAD2 FGRAD2 MATT FATT, zero
+
+. rename _freq Freq
+
+. saveold table_grad_better.dta, replace version(12)
+(saving in Stata 12 format, which can be read by Stata 11 or 12)
+file table_grad_better.dta saved
+
+. 
+. use fulldata, clear
+
+. saveold fulldata_old.dta, replace version(12)
+(saving in Stata 12 format, which can be read by Stata 11 or 12)
+file fulldata_old.dta saved
+
+. 
+. 
+. 
+end of do-file
+
+. log close
+      name:  <unnamed>
+       log:  /home/aarong/Private/AddHealth/organizedata_rd2.txt
+  log type:  text
+ closed on:  24 Jun 2016, 14:32:57
+---------------------------------------------------------------------------------------------------------------------------

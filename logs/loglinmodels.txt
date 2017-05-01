@@ -1,0 +1,134 @@
+> summary(model1a)
+
+Call:
+glm.nb(formula = Freq ~ FATT + MATT + FEDU + MEDU + FATT * FEDU + 
+    MATT * MEDU + attmatch + edmatch + uexchangesym, data = edtable, 
+    init.theta = 5.343250305, link = log)
+
+Coefficients:
+                 Estimate Std. Error z value Pr(>|z|)    
+attmatchTRUE       0.8312     0.1128   7.369 1.72e-13 ***
+edmatchTRUE        1.2833     0.1103  11.640  < 2e-16 ***
+uexchangesymTRUE   0.5240     0.1554   3.372 0.000746 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for Negative Binomial(5.3433) family taken to be 1)
+
+    Null deviance: 1413.5  on 255  degrees of freedom
+Residual deviance:  295.8  on 222  degrees of freedom
+
+> summary(model1b)
+
+Call:
+glm.nb(formula = Freq ~ FATT + MATT + FEDU + MEDU + attmatch + 
+    edmatch + uexchangesym + uexchangestereo + FATT:FEDU + MATT:MEDU, 
+    data = edtable, init.theta = 5.424019579, link = log)
+
+Coefficients:
+                    Estimate Std. Error z value Pr(>|z|)    
+(Intercept)          -0.8009     0.3191  -2.510 0.012081 *  
+attmatchTRUE          0.8258     0.1123   7.354 1.92e-13 ***
+edmatchTRUE           1.2879     0.1100  11.713  < 2e-16 ***
+uexchangesymTRUE      0.3415     0.2185   1.563 0.117967    
+uexchangestereoTRUE   0.3474     0.2954   1.176 0.239570    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for Negative Binomial(5.424) family taken to be 1)
+
+    Null deviance: 1423.3  on 255  degrees of freedom
+Residual deviance:  295.7  on 221  degrees of freedom
+
+> summary(model1c)
+
+Call:
+glm.nb(formula = Freq ~ FATT + MATT + FEDU + MEDU + attmatch + 
+    edmatch + uexchangestereo + uexchangeopp + FATT:FEDU + MATT:MEDU, 
+    data = edtable, init.theta = 5.424103083, link = log)
+
+Coefficients:
+                    Estimate Std. Error z value Pr(>|z|)    
+(Intercept)          -0.8009     0.3191  -2.510 0.012081 *  
+attmatchTRUE          0.8258     0.1123   7.354 1.92e-13 ***
+edmatchTRUE           1.2879     0.1100  11.713  < 2e-16 ***
+uexchangestereoTRUE   0.6890     0.2100   3.281 0.001035 ** 
+uexchangeoppTRUE      0.3415     0.2185   1.563 0.117966    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for Negative Binomial(5.4241) family taken to be 1)
+
+    Null deviance: 1423.3  on 255  degrees of freedom
+Residual deviance:  295.7  on 221  degrees of freedom
+
+***College Completion***
+
+> summary(model2a)
+
+Call:
+glm.nb(formula = Freq ~ FATT + MATT + FEDU + MEDU + FATT * FEDU + 
+    MATT * MEDU + attmatch + edmatch + uexchangesym, data = coltable, 
+    init.theta = 43.8765227, link = log)
+
+Coefficients:
+                 Estimate Std. Error z value Pr(>|z|)    
+attmatchTRUE      0.67791    0.09040   7.499 6.43e-14 ***
+edmatchTRUE       1.48725    0.10537  14.114  < 2e-16 ***
+uexchangesymTRUE  0.19085    0.19977   0.955 0.339399    
+FATT3:FEDU1       0.07977    0.32482   0.246 0.806003    
+FATT4:FEDU1       0.60577    0.32670   1.854 0.063708 .  
+FATT5:FEDU1       1.02578    0.34454   2.977 0.002908 ** 
+MATT3:MEDU1       0.68841    0.38862   1.771 0.076488 .  
+MATT4:MEDU1       1.12507    0.39378   2.857 0.004275 ** 
+MATT5:MEDU1       1.59600    0.42665   3.741 0.000183 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for Negative Binomial(43.8765) family taken to be 1)
+
+    Null deviance: 1724.882  on 63  degrees of freedom
+Residual deviance:   65.618  on 46  degrees of freedom
+
+> summary(model2b)
+
+Call:
+glm.nb(formula = Freq ~ FATT + MATT + FEDU + MEDU + attmatch + 
+    edmatch + uexchangesym + uexchangestereo + FATT:FEDU + MATT:MEDU, 
+    data = coltable, init.theta = 44.37565047, link = log)
+
+Coefficients:
+                    Estimate Std. Error z value Pr(>|z|)    
+attmatchTRUE         0.67701    0.09017   7.508 6.00e-14 ***
+edmatchTRUE          1.49014    0.10608  14.048  < 2e-16 ***
+uexchangesymTRUE     0.15010    0.26977   0.556 0.577934    
+uexchangestereoTRUE  0.08618    0.38994   0.221 0.825094    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for Negative Binomial(44.3757) family taken to be 1)
+
+    Null deviance: 1732.051  on 63  degrees of freedom
+Residual deviance:   65.731  on 45  degrees of freedom
+
+> summary(model2c)
+
+Call:
+glm.nb(formula = Freq ~ FATT + MATT + FEDU + MEDU + attmatch + 
+    edmatch + uexchangestereo + uexchangeopp + FATT:FEDU + MATT:MEDU, 
+    data = coltable, init.theta = 44.37565047, link = log)
+
+Coefficients:
+                    Estimate Std. Error z value Pr(>|z|)    
+(Intercept)          0.10254    0.21051   0.487 0.626182    
+attmatchTRUE         0.67701    0.09017   7.508 6.00e-14 ***
+edmatchTRUE          1.49014    0.10608  14.048  < 2e-16 ***
+uexchangestereoTRUE  0.23628    0.28870   0.818 0.413124    
+uexchangeoppTRUE     0.15010    0.26977   0.556 0.577934    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for Negative Binomial(44.3757) family taken to be 1)
+
+    Null deviance: 1732.051  on 63  degrees of freedom
+Residual deviance:   65.731  on 45  degrees of freedom
